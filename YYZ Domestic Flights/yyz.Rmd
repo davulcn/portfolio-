@@ -1,0 +1,80 @@
+---
+title: "Toronto Pearson Destinations"
+author: Nurefsan Davulcu 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("leaflet")
+library("geosphere")
+library("ggmap")
+library("RColorBrewer")
+```
+
+This map shows the weekly frequency of all domestic flights departing Toronto Pearson International airport as of April 2023. The routes follow a great circle path (path with the shortest distance along a sphere) like what is shown on in-flight screens. 
+
+```{r yyz, echo=FALSE}
+
+airports<- read.csv("airports.txt", header=FALSE)
+airports <- airports[,c(2,5,7,8)]
+colnames(airports) <- c("Name","IATA","lat","long")
+dest<-read.csv("YYZ_destinations.csv")
+colnames(dest) <- c("IATA","Freq")
+dat <- merge(dest, airports, by = c('IATA'))
+yyz.long <- -79.6306
+yyz.lat <- 43.6772
+dat$ref_lat <- rep(yyz.lat,nrow(dat))
+dat$ref_long <- rep(yyz.long,nrow(dat))
+dat$display.name <- paste0(dat$Name," (",dat$IATA,")")
+
+# great circle points 
+gc<-gcIntermediate(dat[,5:4],dat[,7:6],15,addStartEnd=TRUE)
+# colour palette 
+pal<-brewer.pal(n = 7, name = 'Blues')[3:7]
+# values 
+val<-c('<=10',"(10-20]","(20-30]","(30-40]",">40")
+# assign colours to Freq 
+colours<-dat$Freq.range<-cut(dat$Freq,
+                             breaks = c(0,10,20,30,40,Inf),
+                             labels=pal)
+# Make the map 
+
+mymap = leaflet(data=dat) %>%
+        addProviderTiles("CartoDB.Positron") 
+
+for (i in 1:length(gc)) {
+mymap = mymap %>%
+        addPolylines(
+             lng = gc[[i]][,1], 
+             lat = gc[[i]][,2],
+             color = colours[i],
+             label = paste(dat$IATA[i],":",dat$Freq[i]),
+             labelOptions = labelOptions(noHide = F, direction = "top"),
+             opacity=0.8,
+             weight=4)
+}
+
+mymap = mymap %>% 
+        addCircleMarkers(~long,~lat,label = ~display.name, 
+                        radius=5, color = "black",
+                        fillOpacity = 1) %>%
+        addCircleMarkers(yyz.long, yyz.lat, label = "Lester B. Pearson International Airport", 
+                        labelOptions = labelOptions(noHide = T),
+                        radius=5, opacity=1, color = "red",
+                        fillOpacity = 1) %>%
+        addLegend(position = "topright", 
+                  colors = pal, 
+                  labels = val, 
+                  title="Flights per week",
+                  opacity=1)
+      
+mymap
+
+```
+
+## Data Sources 
+This project was completed in R using the Leaflet package. \
+https://www.torontopearson.com/en/airlines \
+https://openflights.org/data.html
+
