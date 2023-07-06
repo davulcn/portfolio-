@@ -1,3 +1,3 @@
-[This map](https://rpubs.com/ndavulcu/yyz_map) shows the weekly frequency of all domestic flights departing Toronto Pearson International airport as of April 2023. The routes follow a great circle path (path with the shortest distance along a sphere) like what is shown on in-flight screens.
+[This map](https://rpubs.com/ndavulcu/yyz_map) shows the weekly frequency of all domestic flights departing Toronto Pearson International airport as of April 2023. 
 
 
